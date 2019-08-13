@@ -36,7 +36,7 @@ public class MovieTvAdapter extends RecyclerView.Adapter<MovieTvAdapter.MovieTvV
     public void onBindViewHolder(@NonNull MovieTvAdapter.MovieTvViewHolder holder, int position) {
         MovieTvItems items = mMovieTvItems.get(position);
         holder.txt.setText(items.getTitle());
-        Picasso.get().load(""+items.getPoster()).into(holder.photo);
+        Picasso.get().load("https://image.tmdb.org/t/p/w500"+items.getPoster()).into(holder.photo);
     }
 
     @Override

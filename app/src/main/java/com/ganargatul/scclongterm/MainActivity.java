@@ -2,6 +2,14 @@ package com.ganargatul.scclongterm;
 
 import android.os.Bundle;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.ganargatul.scclongterm.adapter.MovieTvAdapter;
+import com.ganargatul.scclongterm.item.MovieTvItems;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -18,12 +26,25 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.Menu;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    RecyclerView mRecyclerview;
+    ArrayList<MovieTvItems>mMovieTvItems = new ArrayList<>();
+    MovieTvAdapter mMovieTvAdapter;
+   // MovieTvItems movieTvItems = new MovieTvItems();
+    RequestQueue mRequestQueue;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,10 +66,50 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
+        mRecyclerview = findViewById(R.id.container);
+        mRecyclerview.setHasFixedSize(true);
+        mRecyclerview.setLayoutManager(new LinearLayoutManager(
+                MainActivity.this,
+                RecyclerView.VERTICAL,false));
+        mRequestQueue = Volley.newRequestQueue(MainActivity.this);
+        getdata();
     }
 
     void getdata(){
+        String url = getResources().getString(R.string.api);
+        JsonObjectRequest mRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray results = response.getJSONArray("results");
+                    int jumlah = results.length();
+                    for (int i = 0;i<jumlah;i++){
+                        JSONObject data = results.getJSONObject(i);
+                        String title = data.getString("title");
+                        String poster = data.getString("poster_path");
+                        String overview = data.getString("overview");
+                        MovieTvItems movieTvItems = new MovieTvItems();
+                        movieTvItems.setTitle(title);
+                        movieTvItems.setPoster(poster);
+                        movieTvItems.setOverview(overview);
+                        mMovieTvItems.add(movieTvItems);
 
+                    }
+                    mMovieTvAdapter = new MovieTvAdapter(MainActivity.this,
+                            mMovieTvItems);
+                    mRecyclerview.setAdapter(mMovieTvAdapter);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+        mRequestQueue.add(mRequest);
     }
 
 
@@ -59,6 +120,7 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
+
         }
     }
 
